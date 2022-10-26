@@ -40,8 +40,6 @@ func (s *SmartContract) CreateCompany(ctx contractapi.TransactionContextInterfac
 		return response, err
 	}
 
-	fmt.Println(organization)
-
 	return response, ctx.GetStub().PutState(compName, compJSON)
 }
 
