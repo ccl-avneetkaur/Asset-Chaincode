@@ -15,5 +15,12 @@ type Organization struct {
 	UserName    string   `json:"commonName"`
 	CompanyName string   `json:"compName"`
 	TimeStamp   int64    `json:"timeStamp"`
-	MemberList  []string `json:"[]"`
+	MemberList  []string `json:"memberList"`
+}
+
+type Response struct {
+	TxID    string      `json:"txId"`
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }

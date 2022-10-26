@@ -9,15 +9,21 @@ import (
 )
 
 // CreateCompany issues a new asset to the world state with given details.
-func (s *SmartContract) CreateCompany(ctx contractapi.TransactionContextInterface, compName string) (string, error) {
+func (s *SmartContract) CreateCompany(ctx contractapi.TransactionContextInterface, compName string) (Response, error) {
+	response := Response{
+		TxID:    ctx.GetStub().GetTxID(),
+		Success: false,
+		Message: "",
+		Data:    nil,
+	}
 	commonName, err := getCommonName(ctx)
 	if err != nil {
-		return "", err
+		return response, err
 	}
 	mspId, _ := ctx.GetClientIdentity().GetMSPID()
 	timestamp, err := ctx.GetStub().GetTxTimestamp()
 	if err != nil {
-		return "", err
+		return response, err
 	}
 	// fmt.Println("timestamp: ", timestamp)
 
@@ -31,32 +37,46 @@ func (s *SmartContract) CreateCompany(ctx contractapi.TransactionContextInterfac
 	// fmt.Println("Company details are: ", organization)
 	compJSON, err := json.Marshal(organization)
 	if err != nil {
-		return "", err
+		return response, err
 	}
 
-	return "", ctx.GetStub().PutState(compName, compJSON)
+	fmt.Println(organization)
+
+	return response, ctx.GetStub().PutState(compName, compJSON)
 }
 
 // ReadAsset returns the asset stored in the world state with given id.
-func (s *SmartContract) ReadCompany(ctx contractapi.TransactionContextInterface, compName string) (*Organization, error) {
+func (s *SmartContract) ReadCompany(ctx contractapi.TransactionContextInterface, compName string) (Response, error) {
+	response := Response{
+		TxID:    ctx.GetStub().GetTxID(),
+		Success: false,
+		Message: "",
+		Data:    nil,
+	}
 	compJSON, err := ctx.GetStub().GetState(compName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read from world state: %v", err)
+		return response, fmt.Errorf("failed to read from world state: %v", err)
 	}
 	if compJSON == nil {
-		return nil, fmt.Errorf("the asset %s does not exist", compName)
+		return response, fmt.Errorf("the asset %s does not exist", compName)
 	}
 
 	var organization Organization
 	err = json.Unmarshal(compJSON, &organization)
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
-	return &organization, nil
+	return response, err
 }
 
-func (s *SmartContract) AddMember(ctx contractapi.TransactionContextInterface, compName string, memberName string) (string, error) {
+func (s *SmartContract) AddMember(ctx contractapi.TransactionContextInterface, compName string, memberName string) (Response, error) {
+	response := Response{
+		TxID:    ctx.GetStub().GetTxID(),
+		Success: false,
+		Message: "",
+		Data:    nil,
+	}
 	commonName, _ := getCommonName(ctx)
 	companyDetailsAsBytes, _ := ctx.GetStub().GetState(compName)
 	log.Println("Company details as bytes: ", companyDetailsAsBytes)
@@ -64,13 +84,13 @@ func (s *SmartContract) AddMember(ctx contractapi.TransactionContextInterface, c
 	var organization Organization
 	err := json.Unmarshal(companyDetailsAsBytes, &organization)
 	if err != nil {
-		return "", err
+		return response, err
 	}
 	companyDetails := string(companyDetailsAsBytes)
 	log.Println("Company details are: ", companyDetails)
 
 	if organization.UserName != commonName {
-		return "", fmt.Errorf("only user can add members")
+		return response, fmt.Errorf("only user can add members")
 
 	} else {
 		organization.MemberList = append(organization.MemberList, memberName)
@@ -78,10 +98,10 @@ func (s *SmartContract) AddMember(ctx contractapi.TransactionContextInterface, c
 
 	compJSON, err := json.Marshal(organization)
 	if err != nil {
-		return "", err
+		return response, err
 	}
 
-	return "", ctx.GetStub().PutState(compName, compJSON)
+	return response, ctx.GetStub().PutState(compName, compJSON)
 }
 
 func (s *SmartContract) DisplayMembers(ctx contractapi.TransactionContextInterface, compName string) ([]string, error) {
@@ -95,12 +115,18 @@ func (s *SmartContract) DisplayMembers(ctx contractapi.TransactionContextInterfa
 	return organization.MemberList, nil
 }
 
-func (s *SmartContract) LeaveCompany(ctx contractapi.TransactionContextInterface, compName string, memberName string) (string, error) {
+func (s *SmartContract) LeaveCompany(ctx contractapi.TransactionContextInterface, compName string, memberName string) (Response, error) {
+	response := Response{
+		TxID:    ctx.GetStub().GetTxID(),
+		Success: false,
+		Message: "",
+		Data:    nil,
+	}
 	companyDetailsAsBytes, _ := ctx.GetStub().GetState(compName)
 	var organization Organization
 	err := json.Unmarshal(companyDetailsAsBytes, &organization)
 	if err != nil {
-		return "", err
+		return response, err
 	}
 	for index := 0; index < len(organization.MemberList); index++ {
 		if organization.MemberList[index] == memberName {
@@ -113,8 +139,8 @@ func (s *SmartContract) LeaveCompany(ctx contractapi.TransactionContextInterface
 
 	compJSON, err := json.Marshal(organization)
 	if err != nil {
-		return "", err
+		return response, err
 	}
 
-	return "", ctx.GetStub().PutState(compName, compJSON)
+	return response, ctx.GetStub().PutState(compName, compJSON)
 }
